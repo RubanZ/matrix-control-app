@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Electron based gui for micropython REPL over serialport!</title>
+</head>
+
+<body>
+    <h1>Serial terminal</h1>
+    <textarea rows="30" cols="50" id="incomingData"></textarea>
+    </br>
+    <textarea rows="1" cols="50" id="inputText"></textarea>
+    </br>
+    <input id="button" type="submit" name="button" value="Ctrl+c" />
+
+    <script>
+
+        //load serialport module
+        serialPort = require('serialport');
+        const Readline = serialPort.parsers.Readline;
+
+        //initialize serialport with 115200 baudrate.
+        var sp = new serialPort('COM3', {
+            baudRate: 115200,
+        });
+
+        //parse incoming data line-by-line from serial port.
+        const parser = sp.pipe(new Readline({ delimiter: '\r\n' }));
+        parser.on('data', addText);
+
+        //append incoming data to the textarea.
+        function addText(event) {
+            document.getElementById("incomingData").value += "\n" + event;
+        }
+
+        function writeonSer(data) {
+            //Write the data to serial port.
+            sp.write(data, function (err) {
+                if (err) {
+                    return console.log('Error on write: ', err.message);
+                }
+                console.log('message written');
+            });
+
+        }
+
+        document.getElementById('in').onkeypress = function (e) {
+            if (!e) e = window.event;
+            var keyCode = e.keyCode || e.which;
+            //write the data to serial when enter key is pressed.
+            if (keyCode == '13') {
+                //console.log("enter pressed", document.getElementById("inputText").value);
+                writeonSer(document.getElementById("inputText").value + "\r\n");
+                document.getElementById('in').value = "";
+                return false;
+            }
+        }
+
+        document.getElementById('button').onclick = function (e) {
+            //send ctrl+c to serialport
+            writeonSer('\x03');
+        }
+    </script>
+    <script>
+        // You can also require other files to run in this process
+        require('./renderer.js')
+    </script>
+</body>
+
+</html>
+
+
+
+
+<div class="uk-container uk-container-expand uk-overflow-auto uk-height-large" uk-height-viewport="offset-bottom: 150">
+    <h1>Serial terminal</h1>
+    <textarea rows="15" cols="50" id="incomingData1"></textarea>
+    </br>
+    <textarea rows="1" cols="50" id="inputText"></textarea>
+    </br>
+    <input id="button" type="submit" name="button" value="Ctrl+c" />
+
+    <div class="uk-margin">
+        <div uk-form-custom="target: > * > span:first-child">
+            <select id="port-select">
+                <option value="" selected disabled>Обновление списка...</option>
+            </select>
+            <button class="uk-button uk-button-default" type="button" tabindex="-1">
+                <span></span>
+                <span uk-icon="icon: chevron-down"></span>
+            </button>
+        </div>
+    </div>
+    <div class="uk-margin">
+        <button class="uk-button uk-button-default">Button</button>
+    </div>
+</div>
+<div class="uk-overlay uk-section uk-section-muted uk-padding-remove-top uk-position-bottom">
+    <div>
+        <label class="uk-form-label" for="incomingData">Монитор порта</label>
+        <div class="uk-form-controls">
+            <textarea class="uk-textarea uk-form-width-1-1" id="incomingData" rows="5" placeholder="Ожидание данных..."
+                readonly></textarea>
+        </div>
+    </div>
+    <div class="uk-margin-small">
+        <div class="uk-inline uk-width-1-1">
+            <a class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: push"></a>
+            <input class="uk-input" id="inputCommand" placeholder="Command" type="text">
+        </div>
+    </div>
+</div>
+<div class="uk-card uk-card-default uk-card-body sticky-bottom" style="z-index: 999;" uk-sticky="bottom: #offset">
+    Stick to the bottom
+</div>

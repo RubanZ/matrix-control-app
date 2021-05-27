@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>MatrixOS Control</title>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="./css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="./js/uikit.min.js"></script>
+    <script src="./js/uikit-icons.min.js"></script>
+
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+
+<body id="app">
+    <nav class="uk-navbar uk-light uk-background-primary" uk-navbar>
+        <div class="uk-navbar-left">
+
+            <ul class="uk-iconnav uk-margin-small-left">
+                <li><a @click="listDevices" uk-icon="icon: refresh"></a></li>
+            </ul>
+            <ul class="uk-navbar-nav uk-margin-bottom uk-margin-top uk-margin-small-left">
+                <li class="uk-margin-small-right">
+                    <div uk-form-custom="target: > * > span:first-child" v-if="list_devices.length > 0">
+                        <select v-model="device.path">
+                            <option value="" selected disabled>Выберите порт...</option>
+                            <option v-for="elem in list_devices">
+                                {{ elem.path }}
+                            </option>
+                        </select>
+                        <button class="uk-button uk-button-default" type="button" tabindex="-1">
+                            <span></span>
+                            <span uk-icon="icon: chevron-down"></span>
+                        </button>
+                    </div>
+                    <div v-else>
+                        <a class="uk-button uk-button-default" v-if="error.length > 0">{{ error }}</a>
+                        <a class="uk-button uk-button-default" v-else>Обновление списка...</a>
+                    </div>
+                </li>
+                <li class=" uk-margin-small-right">
+                    <button v-if="!device.is_connected" class="uk-button uk-button-default"
+                        @click="connect">Подключиться</button>
+                    <button v-else class="uk-button uk-button-default" @click="disconnect">disconnect</button>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+    <div class="uk-background-muted uk-overflow-auto" uk-height-viewport="expand: true">
+        <br />
+        <div class="uk-container uk-margin-remove">
+
+            <h1>Height Expand</h1>
+
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+                ex ea commodo consequat. {{ counter }}</p>
+
+            <p>debug: {{ device.path }}</p>
+            <button class="uk-button uk-button-default" @click="listDevices">list</button>
+
+            <div>
+                <input type="color" id="head" name="head" value="#e66465">
+                <label for="head">Head</label>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="uk-background-secondary uk-light uk-padding-small">
+
+        <div>
+            <label class="uk-form-label" for="incomingData">Монитор порта</label>
+            <div class="uk-form-controls">
+                <textarea class="uk-textarea uk-form-width-1-1" v-model="device.data" rows="5"
+                    placeholder="Ожидание данных..." readonly></textarea>
+            </div>
+        </div>
+        <div class="uk-margin-small">
+            <div class="uk-inline uk-width-1-1">
+                <a class="uk-form-icon uk-form-icon-flip" @click="send" uk-icon="icon: push"></a>
+                <input class="uk-input" id="inputCommand" placeholder="Command" v-model="device.cmd" v-on:keyup.enter="send" type="text">
+            </div>
+        </div>
+    </div>
+
+</body>
+<!-- <script src="../renderer.js"></script> -->
+<script src="../serial_port.js"></script>
+<script>
+    // const serialport = require('serialport');
+
+    const Application = {
+        data() {
+            return {
+                counter: 0,
+                device: {
+                    is_connected: false,
+                    path: "",
+                    data: "",
+                    cmd: ""
+                },
+                list_devices: [],
+                error: ""
+            }
+        },
+        mounted() {
+            setInterval(() => {
+                this.counter++;
+                this.listDevices();
+            }, 1000);
+            setInterval(() => {
+                this.device.data = serial.parser.data;
+            }, 100)
+        },
+        provide: {
+            serial: serial
+        },
+        methods: {
+            listDevices() {
+                serial.list().then((ports, err) => {
+                    this.list_devices = ports;
+                    this.error = err;
+                });
+            },
+            connect() {
+                if (this.device.path.length > 0) {
+                    serial.connect(this.device.path);
+                    this.device.is_connected = true;
+                }
+
+            },
+            disconnect() {
+                serial.disconnect();
+                this.device.is_connected = false;
+            },
+            send() {
+                if (this.device.is_connected){
+                    serial.write(this.device.cmd);
+                }
+                else{
+                    UIkit.notification({ message: "Подключие устройство", status: 'danger', pos: 'top-right' });
+                }
+            }
+        }
+    }
+    const app = Vue.createApp(Application);
+    app.config.globalProperties.$serial = serial;
+    app.mount('#app')
+</script>
+<style>
+    textarea {
+        resize: none;
+    }
+</style>
+
+</html>
