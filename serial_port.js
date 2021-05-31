@@ -1,20 +1,22 @@
 const serialport = require('serialport')
 const Readline = serialport.parsers.Readline;
+const Delimiter = require('@serialport/parser-delimiter')
 
 const serial = {
     device: serialport,
     parser: serialport.parsers.Readline,
     path: "",
     data: "",
-    debbug: true,
+    debbug: false,
 
     connect(value) {
         this.path = value;
         this.device = new serialport(this.path, {
+            hupcl: false,
             lock: false,
             baudRate: 115200,
         });
-        this.parser = this.device.pipe(new Readline({ delimiter: '\r\n' }));
+        this.parser = this.device.pipe(new Delimiter({ delimiter: '\n' }));
         this.parser.on('data', this.get);
 
         if (this.debbug) {
@@ -61,4 +63,7 @@ const serial = {
             console.log("send");
         }
     },
+    clear(){
+        this.parser.data = "";
+    }
 }

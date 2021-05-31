@@ -12,15 +12,43 @@
     <script src="./js/uikit-icons.min.js"></script>
 
     <script src="https://unpkg.com/vue@next"></script>
+    <style>
+        ::-webkit-scrollbar {
+            background-color: rgba(255, 255, 255, 0.267);
+            width: 8px
+        }
+
+        /* background of the scrollbar except button or resizer */
+        ::-webkit-scrollbar-track {
+            background-color: rgba(255, 255, 255, 0.267);
+        }
+
+        ::-webkit-scrollbar-track:hover {
+            background-color: #f4f4f4
+        }
+
+        /* scrollbar itself */
+        ::-webkit-scrollbar-thumb {
+            background-color: #babac0;
+            border-radius: 8px;
+            border: 1px solid #fff
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #a0a0a5;
+            border: 2px solid #f4f4f4
+        }
+
+        /* set button(top and bottom of the scrollbar) */
+        ::-webkit-scrollbar-button {
+            display: none
+        }
+    </style>
 </head>
 
 <body id="app">
     <nav class="uk-navbar uk-light uk-background-primary" uk-navbar>
         <div class="uk-navbar-left">
-
-            <ul class="uk-iconnav uk-margin-small-left">
-                <li><a @click="listDevices" uk-icon="icon: refresh"></a></li>
-            </ul>
             <ul class="uk-navbar-nav uk-margin-bottom uk-margin-top uk-margin-small-left">
                 <li class="uk-margin-small-right">
                     <div uk-form-custom="target: > * > span:first-child" v-if="list_devices.length > 0">
@@ -49,40 +77,177 @@
 
         </div>
     </nav>
-    <div class="uk-background-muted uk-overflow-auto" uk-height-viewport="expand: true">
-        <br />
+    <div class="uk-background-muted " uk-height-viewport="expand: true">
         <div class="uk-container uk-margin-remove">
+            <h1 class="uk-margin-small-top">Изменение настроек</h1>
+            <div uk-grid>
+                <div class="uk-width-auto@m">
+                    <ul class="uk-tab-left" uk-tab="connect: #component-tab-left; animation: uk-animation-fade">
+                        <li><a href="#">Глобальные настройки</a></li>
+                        <li><a href="#">Режим окна</a></li>
+                        <li><a href="#">Ручной режим</a></li>
+                        <li><a href="#">Другое</a></li>
+                    </ul>
+                </div>
+                <div class="uk-width-expand@m"
+                    uk-overflow-auto="selContainer: .uk-background-muted; selContent: .uk-container">
+                    <ul id="component-tab-left" class="uk-switcher">
+                        <li>
+                            <h4>FastLED</h4>
+                            <div class="uk-child-width-1-2@s" uk-grid>
 
-            <h1>Height Expand</h1>
+                                <div>
+                                    <label class="uk-form-label" for="temperature">Температура</label>
+                                    <input class="uk-input" type="color" id="temperature"
+                                        v-model="config.fast_led.temperature" @change="sendFastLED">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="correction">Коррекция цвета</label>
+                                    <input class="uk-input" type="color" id="correction"
+                                        v-model="config.fast_led.correction" @change="sendFastLED">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="file">Файл матрицы</label>
+                                    <input class="uk-input" type="text" id="file" placeholder="Matrix file"
+                                        v-model="config.fast_led.matrix_file" @change="sendFastLED">
+                                </div>
 
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                ex ea commodo consequat. {{ counter }}</p>
 
-            <p>debug: {{ device.path }}</p>
-            <button class="uk-button uk-button-default" @click="listDevices">list</button>
+                            </div>
+                            <h4>Power limits</h4>
+                            <div class="uk-child-width-1-2@s" uk-grid>
+                                <div>
+                                    <label class="uk-form-label" for="volts">Вольты</label>
+                                    <input class="uk-input" type="number" id="volts" placeholder="Matrix file"
+                                        v-model="config.fast_led.power_limit.volts" step="1" @change="sendFastLED">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="milliamps">Миллиамперы</label>
+                                    <input class="uk-input" type="number" id="milliamps" placeholder="Matrix file"
+                                        v-model="config.fast_led.power_limit.milliamps" step="1" @change="sendFastLED">
+                                </div>
+                            </div>
+                            <h4>Wi-FI</h4>
+                            <div class="uk-child-width-1-2@s" uk-grid>
+                                <div>
+                                    <label class="uk-form-label" for="ssid">SSID</label>
+                                    <input class="uk-input" type="text" id="ssid" placeholder="WiFi ssid"
+                                        v-model="config.interfaces.wifi.ssid" @change="sendInterfaces">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="pass">Пароль</label>
+                                    <input class="uk-input" type="password" id="pass" placeholder="WiFi пароль"
+                                        v-model="config.interfaces.wifi.password" @change="sendInterfaces">
+                                </div>
+                            </div>
+                            <h4>Для сохранения настроек необходимо выполнить команду: config -save</h4>
+                        </li>
+                        <li>
+                            <h4>Настройки</h4>
+                            <div class="uk-child-width-1-2@s " uk-grid>
+                                <div>
+                                    <label class="uk-form-label" for="warm-light">Первый цвет</label>
+                                    <div class="uk-form-controls">
+                                        <input class="uk-input" type="color" id="warm-light"
+                                            v-model="config.effects.presence_effect.warm_light" @change="sendPresence_effect">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="cool-light">Второй цвет</label>
+                                    <div class="uk-form-controls">
+                                        <input class="uk-input" type="color" id="cool-light"
+                                            v-model="config.effects.presence_effect.cool_light" @change="sendPresence_effect">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="brightness">Яркость</label>
+                                    <input class="uk-input" id="brightness" type="number" min="0" max="255"
+                                        v-model="config.effects.presence_effect.brightness" step="1" @change="sendPresence_effect">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="periodicity">Переодичнисть</label>
+                                    <input class="uk-input" id="periodicity" type="number" min="100" max="10000"
+                                        v-model="config.effects.presence_effect.periodicity" step="1" @change="sendPresence_effect">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="chance-off">Шанс отключения (меньше -
+                                        больше)</label>
+                                    <input class="uk-input" id="chance-off" type="number" min="1" max="15"
+                                        v-model="config.effects.presence_effect.chance_off" step="1" @change="sendPresence_effect">
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="count-elem">Зажечь за раз</label>
+                                    <input class="uk-input" id="count-elem" type="number" min="1" max="40"
+                                        v-model="config.effects.presence_effect.count_elem" step="1" @change="sendPresence_effect">
+                                </div>
+                            </div>
+                            <h4>Для сохранения настроек необходимо выполнить команду: config -save</h4>
+                        </li>
+                        <li>
+                            <h4>Настройки</h4>
+                            <div class="uk-child-width-1-2@s" uk-grid>
+                                <div>
+                                    <label class="uk-form-label" for="warm-light">Цвет</label>
+                                    <div class="uk-form-controls">
+                                        <input class="uk-input" type="color" id="warm-light"
+                                            v-model="config.effects.manual.light" @change="sendManual_effect">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="uk-form-label" for="brightness">Яркость</label>
+                                    <input class="uk-range" id="brightness" type="range" min="0" max="255"
+                                        v-model="config.effects.manual.brightness" step="1" @change="sendManual_effect">
+                                </div>
 
-            <div>
-                <input type="color" id="head" name="head" value="#e66465">
-                <label for="head">Head</label>
+                            </div>
+                            <h4>Для сохранения настроек необходимо выполнить команду: config -save</h4>
+                        </li>
+                        <li>
+                            <div class="uk-child-width-1-2@s" uk-grid>
+                                <div>
+                                    <p>{{ counter }}</p>
+                                </div>
+                                <div>
+                                    <p>debug: {{ device }}</p>
+                                </div>
+                                <div>
+                                    <button class="uk-button uk-button-default" @click="listDevices">list</button>
+                                </div>
+                                <div>
+                                    <input type="color" id="head" name="head" value="#e66465">
+                                    <label for="head">Head</label>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
-
         </div>
     </div>
 
     <div class="uk-background-secondary uk-light uk-padding-small">
-
-        <div>
-            <label class="uk-form-label" for="incomingData">Монитор порта</label>
-            <div class="uk-form-controls">
-                <textarea class="uk-textarea uk-form-width-1-1" v-model="device.data" rows="5"
-                    placeholder="Ожидание данных..." readonly></textarea>
+        <div uk-grid>
+            <div class="uk-width-1-2">Монитор порта</div>
+            <div class="uk-width-1-2">
+                <ul class="uk-iconnav uk-flex-right">
+                    <li><a @click="onScroll" :uk-icon="[ auto_scroll ? 'icon: lock' : 'icon: unlock']"
+                            uk-tooltip="Auto scroll"></a></li>
+                    <li><a @click="trash" uk-icon="icon: trash" uk-tooltip="Clear"></a></li>
+                </ul>
             </div>
         </div>
+
+        <div class="uk-width-1-1">
+            <pre class="uk-height-small  uk-light"
+                style="padding: 0 10px;background: #393939;border: 1px solid #4e4e4e;transition: .2s ease-in-out;transition-property: color,background-color,border;"
+                id="log">{{ device.row }}</pre>
+        </div>
+
         <div class="uk-margin-small">
             <div class="uk-inline uk-width-1-1">
-                <a class="uk-form-icon uk-form-icon-flip" @click="send" uk-icon="icon: push"></a>
-                <input class="uk-input" id="inputCommand" placeholder="Command" v-model="device.cmd" v-on:keyup.enter="send" type="text">
+                <a class="uk-form-icon uk-form-icon-flip" @click="send" uk-icon="icon: push" uk-tooltip="Send"></a>
+                <input class="uk-input" id="inputCommand" placeholder="Command" v-model="device.cmd"
+                    v-on:keyup.enter="send" type="text">
             </div>
         </div>
     </div>
@@ -97,24 +262,93 @@
         data() {
             return {
                 counter: 0,
+                config: {
+                    "fast_led": {
+                        "matrix_file": "/matrix1.json",
+                        "temperature": "#FFC58F",
+                        "correction": "#FFFFFF",
+                        "power_limit": {
+                            "volts": 12,
+                            "milliamps": 5000
+                        }
+                    },
+
+                    "interfaces": {
+                        "wifi": {
+                            "ssid": "Keenetic-7169_2",
+                            "password": "ces2d9Hm"
+                        }
+                    },
+
+                    "standby_mode": {
+                        "effects": [
+                            "presence_effect"
+                        ],
+                        "time": 10
+                    },
+                    "effects": {
+                        "presence_effect": {
+                            "warm_light": "#FFEAC8",
+                            "cool_light": "#DCC8DC",
+                            "brightness": 50,
+                            "periodicity": 1000,
+                            "chance_off": 2,
+                            "count_elem": 8
+                        },
+                        "rainbow": {
+                            "brightness": 50,
+                            "periodicity": 30,
+                            "direction": 1,
+                            "angel": 0,
+                            "offset": 1,
+                            "last_hue": 0
+                        },
+                        "manual": {
+                            "brightness": 50,
+                            "light": "#FFFFFF"
+                        }
+                    }
+                },
                 device: {
                     is_connected: false,
                     path: "",
-                    data: "",
+                    data: [],
+                    row: "",
                     cmd: ""
                 },
                 list_devices: [],
+                auto_scroll: true,
                 error: ""
             }
         },
         mounted() {
+            document.getElementById("log").addEventListener('wheel', this.offScroll);
             setInterval(() => {
                 this.counter++;
                 this.listDevices();
             }, 1000);
             setInterval(() => {
-                this.device.data = serial.parser.data;
-            }, 100)
+                if (serial.parser.data != "" && serial.parser.data != undefined) {
+                    this.device.row = serial.parser.data;
+                    // serial.parser.data.split('\r\n').forEach(element => {
+                    //     this.device.data.push(element);
+                    // });
+                }
+                // serial.clear();
+
+                if (this.device.data.length > 100) {
+                    this.device.data.shift();
+                }
+                if (this.auto_scroll) {
+                    document.getElementById("log").scrollTop = document.getElementById("log").scrollHeight;
+                }
+
+            }, 10)
+        },
+        computed: {
+            getLog: function () {
+                return this.device.data.join('\r')
+            }
         },
         provide: {
             serial: serial
@@ -138,12 +372,68 @@
                 this.device.is_connected = false;
             },
             send() {
-                if (this.device.is_connected){
+                if (this.device.is_connected) {
                     serial.write(this.device.cmd);
+                    this.device.cmd = "";
                 }
-                else{
+                else {
                     UIkit.notification({ message: "Подключие устройство", status: 'danger', pos: 'top-right' });
                 }
+            },
+            sendFastLED(e) {
+                if (this.device.is_connected) {
+                    serial.write("config -name fast_led -load -data \"" + JSON.stringify(this.config.fast_led).replaceAll("\"", "\\\"") + "\"");
+                    this.device.cmd = "";
+                }
+                else {
+                    UIkit.notification({ message: "Подключие устройство", status: 'danger', pos: 'top-right' });
+                }
+            },
+            sendInterfaces(e) {
+                if (this.device.is_connected) {
+                    serial.write("config -name interfaces -load -data \"" + JSON.stringify(this.config.interfaces).replaceAll("\"", "\\\"") + "\"");
+                    this.device.cmd = "";
+                }
+                else {
+                    UIkit.notification({ message: "Подключие устройство", status: 'danger', pos: 'top-right' });
+                }
+            },
+            sendPresence_effect(e) {
+                if (this.device.is_connected) {
+                    serial.write("effect -name presence_effect -load -data \"" + JSON.stringify(this.config.effects.presence_effect).replaceAll("\"", "\\\"") + "\"");
+                    this.device.cmd = "";
+                }
+                else {
+                    UIkit.notification({ message: "Подключие устройство", status: 'danger', pos: 'top-right' });
+                }
+            },
+            sendManual_effect(e) {
+                if (this.device.is_connected) {
+                    serial.write("effect -name manual -load -data \"" + JSON.stringify(this.config.effects.manual).replaceAll("\"", "\\\"") + "\"");
+                    this.device.cmd = "";
+                }
+                else {
+                    UIkit.notification({ message: "Подключие устройство", status: 'danger', pos: 'top-right' });
+                }
+            },
+            offScroll() {
+                if (document.getElementById("log").scrollHeight - document.getElementById("log").scrollTop < 100) {
+                    this.auto_scroll = true;
+                }
+                else {
+                    this.auto_scroll = false;
+                }
+            },
+            onScroll() {
+                this.auto_scroll = !this.auto_scroll;
+            },
+            trash() {
+                this.device.data = [];
+                this.device.row = "";
+                serial.clear();
+            },
+            test(e) {
+                console.log(e.target.value);
             }
         }
     }

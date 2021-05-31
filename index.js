@@ -9,8 +9,8 @@ let win
 function createWindow() {
     win = new BrowserWindow({
         Title: "MatrixOS",
-        width: 900,
-        height: 720,
+        width: 1030,
+        height: 800,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
