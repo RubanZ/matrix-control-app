@@ -8,7 +8,7 @@
   },
   "keywords": ["fastled", "led control"],
   "author": "Rubanz",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "electron": "^12.0.7",
     "electron-rebuild": "^2.3.5"
