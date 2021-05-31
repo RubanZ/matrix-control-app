@@ -1,5 +1,5 @@
 {
-  "name": "matrix-control-system",
+  "name": "matrix-control-app",
   "version": "1.0.0",
   "description": "Система управления матрицами на ESP32",
   "main": "index.js",
